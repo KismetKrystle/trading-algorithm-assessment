@@ -1,0 +1,21 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------< codingblackfemales:getting-started >-----------------
+[INFO] Building getting-started 0.01-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] The POM for codingblackfemales:algo:jar:0.01-SNAPSHOT is missing, no dependency information available
+[WARNING] The POM for codingblackfemales:backtest:jar:0.01-SNAPSHOT is missing, no dependency information available
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.516 s
+[INFO] Finished at: 2024-10-23T00:45:20+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal on project getting-started: Could not resolve dependencies for project codingblackfemales:getting-started:jar:0.01-SNAPSHOT: The following artifacts could not be resolved: codingblackfemales:algo:jar:0.01-SNAPSHOT (absent), codingblackfemales:backtest:jar:0.01-SNAPSHOT (absent): Could not find artifact codingblackfemales:algo:jar:0.01-SNAPSHOT -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/DependencyResolutionException
