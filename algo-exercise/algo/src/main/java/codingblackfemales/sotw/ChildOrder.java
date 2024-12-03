@@ -5,16 +5,20 @@ import messages.order.Side;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 public class ChildOrder {
     private Side side;
     private long orderId;
     private long quantity;
     private long price;
-
+    
     private int state;
 
     private List<ChildFill> fills = new LinkedList<>();
+
+    List<String> fruits = new ArrayList<>();
+    
 
     public ChildOrder(Side side, long orderId, long quantity, long price, int state) {
         this.side = side;
@@ -26,6 +30,10 @@ public class ChildOrder {
 
     public Side getSide() {
         return side;
+    } 
+    
+    public void setSide(Side side){
+        this.side = side;
     }
 
     public long getOrderId() {
