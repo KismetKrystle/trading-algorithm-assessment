@@ -1,95 +1,130 @@
 package codingblackfemales.gettingstarted;
 
 import codingblackfemales.algo.AlgoLogic;
+import codingblackfemales.sotw.ChildOrder;
 import codingblackfemales.sotw.SimpleAlgoState;
 import codingblackfemales.sotw.marketdata.AskLevel;
 import codingblackfemales.sotw.marketdata.BidLevel;
 import messages.order.Side;
-
-import org.agrona.concurrent.UnsafeBuffer;
-
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
- * This test is designed to check your algo behavior in isolation of the order book.
- *
- * You can tick in market data messages by creating new versions of createTick() (ex. createTick2, createTickMore etc..)
- *
- * You should then add behaviour to your algo to respond to that market data by creating or cancelling child orders.
- *
- * When you are comfortable you algo does what you expect, then you can move on to creating the MyAlgoBackTest.
- *
+ * This test is designed to check your algo behavior in isolation from the order book.
+ * 
+ * You can tick in market data messages by creating new versions of createTick() 
+ * and testing your algo's responses to the simulated data.
  */
 public class MyAlgoTest extends AbstractAlgoTest {
 
     @Override
     public AlgoLogic createAlgoLogic() {
-        //this adds your algo logic to the container classes
+        // Add your algo logic to the test environment
         return new MyAlgoLogic();
     }
 
-    protected UnsafeBuffer createTick2() {
-
-        final MessageHeaderEncoder headerEncoder = new MessageHeaderEncoder();
-        final BookUpdateEncoder encoder = new BookUpdateEncoder();
-    
-        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(1024);
-        final UnsafeBuffer directBuffer = new UnsafeBuffer(byteBuffer);
-    
-        // Write the encoded output to the direct buffer
-        encoder.wrapAndApplyHeader(directBuffer, 0, headerEncoder);
-    
-        // Set the fields to desired values
-        encoder.venue(Venue.XLON);
-        encoder.instrumentId(123L);
-    
-        encoder.askBookCount(3)
-                .next().price(120L).size(101L) // Higher ask prices
-                .next().price(125L).size(200L)
-                .next().price(130L).size(500L);
-    
-        encoder.bidBookCount(3)
-                .next().price(90L).size(100L)  // Lower bid prices
-                .next().price(85L).size(200L)
-                .next().price(80L).size(300L);
-    
-        encoder.instrumentStatus(InstrumentStatus.CONTINUOUS);
-        encoder.source(Source.STREAM);
-    
-        return directBuffer;
-    }
-    
+    /**
+     * Test basic algo behavior with a single tick of market data.
+     */
     @Test
-    public void testDispatchThroughSequencer() throws Exception {
+    public void testSingleTickBehavior() throws Exception {
+        // Create a sample market data tick
+        SimpleAlgoState tick = createTick(100.0, 95.0, 10, 15);
 
-        //create a sample market data tick....
-        send(createTick());
-
-        //simple assert to check we had 3 orders created
-        //assertEquals(container.getState().getChildOrders().size(), 3);
-    
-           // Check that a buy order was created
-        var childOrders = container.getState().getChildOrders();
-        assertEquals(1, childOrders.size()); // Expect 1 order to be created
-
-        var order = childOrders.get(0);
-        assertEquals(Side.BUY, order.getSide());
-        assertEquals(100L, order.getPrice());
-        assertEquals(1, order.getQuantity());
-    }
-
+        // Send the tick to the algo
+        send(tick);
+        
+                // Validate behavior: no orders should be created for a neutral tick
+                assertEquals("No child orders should be created initially.", 
+                             container.getState().getChildOrders().size(), 0);
+            }
+        
+            private void send(SimpleAlgoState tick) {
+                // TODO Auto-generated method stub
+                throw new UnsupportedOperationException("Unimplemented method 'send'");
+            }
+        
+            /**
+     * Test algo response to significant price movements.
+     */
     @Test
-    public void testNoActionWhenThresholdNotMet() throws Exception {
-        // Simulate a market data tick with a high highest bid
-        send(createTick2());
-       
+    public void testAlgoResponseToPriceMovements() throws Exception {
+        // Create market data with a low ask price, triggering a buy order
+        SimpleAlgoState tick = createTick(85.0, 95.0, 10, 15);
+        send(tick);
 
-        // Check that no orders were created
-        var childOrders = container.getState().getChildOrders();
-        assertTrue(childOrders.isEmpty());
+        // Validate that a buy order is created
+        List<ChildOrder> childOrders = container.getState().getChildOrders();
+        assertEquals("One child order should be created for a buy.", 1, childOrders.size());
+        assertEquals("The created order should be a BUY order.", Side.BUY, childOrders.get(0).getSide());
+
+        // Create market data with a high bid price, triggering a sell order
+        tick = createTick(100.0, 115.0, 10, 15);
+        send(tick);
+
+        // Validate that a sell order is created
+        childOrders = container.getState().getChildOrders();
+        assertEquals("Two child orders should now exist.", 2, childOrders.size());
+        assertEquals("The second order should be a SELL order.", Side.SELL, childOrders.get(1).getSide());
     }
 
+    /**
+     * Helper method to simulate a tick of market data.
+     */
+    private SimpleAlgoState createTick(double askPrice, double bidPrice, long askQuantity, long bidQuantity) {
+        return new SimpleAlgoState() {
+            private final List<AskLevel> askLevels = List.of(new AskLevel(askPrice, askQuantity));
+            private final List<BidLevel> bidLevels = List.of(new BidLevel(bidPrice, bidQuantity));
+            private final List<ChildOrder> childOrders = new ArrayList<>();
+
+            @Override
+            public String getSymbol() {
+                return "TEST_SYMBOL";
+            }
+
+            @Override
+            public int getBidLevels() {
+                return bidLevels.size();
+            }
+
+            @Override
+            public int getAskLevels() {
+                return askLevels.size();
+            }
+
+            @Override
+            public BidLevel getBidAt(int index) {
+                return bidLevels.get(index);
+            }
+
+            @Override
+            public AskLevel getAskAt(int index) {
+                return askLevels.get(index);
+            }
+
+            @Override
+            public List<ChildOrder> getChildOrders() {
+                return childOrders;
+            }
+
+            @Override
+            public List<ChildOrder> getActiveChildOrders() {
+                return childOrders;
+            }
+
+            @Override
+            public long getInstrumentId() {
+                return 12345L;
+            }
+
+            @Override
+            public long getHighestBid() {
+                return bidLevels.stream().mapToLong(BidLevel::getPrice).max().orElse(0L);
+            }
+        };
+    }
 }
